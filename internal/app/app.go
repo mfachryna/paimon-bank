@@ -13,6 +13,10 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/mfachryna/paimon-bank/config"
 	"github.com/mfachryna/paimon-bank/internal/common/utils/validation"
+	balancehandler "github.com/mfachryna/paimon-bank/internal/handler/balance"
+	imagehandler "github.com/mfachryna/paimon-bank/internal/handler/image"
+	userhandler "github.com/mfachryna/paimon-bank/internal/handler/user"
+	"github.com/mfachryna/paimon-bank/internal/repository"
 	"github.com/mfachryna/paimon-bank/pkg/db"
 	"github.com/mfachryna/paimon-bank/pkg/logger"
 	"github.com/mfachryna/paimon-bank/pkg/promotheus"
@@ -36,9 +40,14 @@ func Run(cfg *config.Configuration) {
 
 	r := chi.NewRouter()
 
+	ur := repository.NewUserRepo(pgx, logger)
+	br := repository.NewBalanceRepo(pgx, logger)
 	r.Handle("/metrics", promhttp.Handler())
 	r.Route("/v1", func(r chi.Router) {
 		r.Use(promotheus.PrometheusMiddleware)
+		userhandler.NewUserHandler(r, ur, validate, *cfg, logger)
+		balancehandler.NewBalanceHandler(r, ur, br, validate, *cfg, logger)
+		imagehandler.NewImageHandler(r, *validate, *cfg, logger)
 	})
 
 	s := &http.Server{

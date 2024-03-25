@@ -5,32 +5,40 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/mfachryna/paimon-bank/config"
 	interfaces "github.com/mfachryna/paimon-bank/internal/interfaces"
+	"github.com/mfachryna/paimon-bank/pkg/jwt"
 	"go.uber.org/zap"
 )
 
-type UserHandler struct {
+type BalanceHandler struct {
 	ur  interfaces.UserRepository
+	br  interfaces.BalanceRepository
 	val *validator.Validate
 	cfg config.Configuration
 	log *zap.Logger
 }
 
-func NewUserHandler(
+func NewBalanceHandler(
 	r chi.Router,
 	ur interfaces.UserRepository,
+	br interfaces.BalanceRepository,
 	val *validator.Validate,
 	cfg config.Configuration,
 	log *zap.Logger,
 ) {
-	uh := &UserHandler{
+	bh := &BalanceHandler{
 		ur:  ur,
+		br:  br,
 		val: val,
 		cfg: cfg,
 		log: log,
 	}
-
-	r.Route("/user", func(r chi.Router) {
-		r.Post("/register", uh.Register)
-		r.Post("/login", uh.Login)
+	r.Group(func(r chi.Router) {
+		r.Use(jwt.JwtMiddleware)
+		r.Post("/transaction", bh.Transaction)
+		r.Route("/balance", func(r chi.Router) {
+			r.Post("/", bh.Store)
+			r.Get("/", bh.Index)
+			r.Get("/history", bh.History)
+		})
 	})
 }

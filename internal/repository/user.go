@@ -51,7 +51,7 @@ func (ur *UserRepository) FindByEmail(ctx context.Context, email string) (*entit
 func (ur *UserRepository) Insert(ctx context.Context, data entity.User) error {
 	var sql string
 
-	sql = `INSERT INTO users (id,email,name,password ,created_at) VALUES ($1,$2,$3,$4,now())`
+	sql = `INSERT INTO users (id,email,name,password) VALUES ($1,$2,$3,$4)`
 	if _, err := ur.db.Exec(ctx, sql, data.ID, data.Email, data.Name, data.Password); err != nil {
 		return err
 	}
