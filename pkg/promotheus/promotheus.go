@@ -2,6 +2,7 @@ package promotheus
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -12,7 +13,7 @@ func PrometheusMiddleware(next http.Handler) http.Handler {
 	registry := prometheus.NewRegistry()
 
 	histogram := promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Name:    "shopifyx_requests",
+		Name:    "paimon_bank_requests",
 		Help:    "Duration of HTTP requests in seconds.",
 		Buckets: prometheus.LinearBuckets(1, 1, 10),
 	}, []string{"path", "method", "status"})
@@ -26,7 +27,7 @@ func PrometheusMiddleware(next http.Handler) http.Handler {
 		next.ServeHTTP(rw, r)
 
 		duration := time.Since(startTime).Seconds()
-		histogram.WithLabelValues(r.Method, r.URL.Path, http.StatusText(rw.status)).Observe(duration)
+		histogram.WithLabelValues(r.URL.Path, r.Method, strconv.Itoa(rw.status)).Observe(duration)
 	})
 }
 

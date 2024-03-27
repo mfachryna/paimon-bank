@@ -1,0 +1,51 @@
+version: "3"
+services:
+    backend:
+        build:
+            context: .
+            dockerfile: dockerfile
+        ports:
+            - "8080:8080"
+        network_mode: host
+        environment:
+            DB_NAME: ${DB_NAME}
+            DB_PORT: ${DB_PORT}
+            DB_HOST: ${DB_HOST}
+            DB_USERNAME: ${DB_USERNAME}
+            DB_PASSWORD: ${DB_PASSWORD}
+            DB_PARAMS: ${DB_PARAMS}
+            JWT_SECRET: ${JWT_SECRET}
+            BCRYPT_SALT: ${BCRYPT_SALT}
+            S3_ID: ${S3_ID}
+            S3_SECRET_KEY: ${S3_SECRET_KEY}
+            S3_BUCKET_NAME: ${S3_BUCKET_NAME}
+            S3_REGION: ${S3_REGION}
+            ENV: ${ENV}
+
+    prometheus:
+        image: prom/prometheus:latest
+        ports:
+            - "9090:9090"
+        network_mode: host
+        volumes:
+            - ./prometheus.yml:/etc/prometheus/prometheus.yml
+            - prometheus_data:/prometheus
+        command:
+            - "--config.file=/etc/prometheus/prometheus.yml"
+            - "--storage.tsdb.path=/prometheus"
+            - "--web.enable-lifecycle"
+    grafana:
+        image: grafana/grafana:latest
+        ports:
+            - "3000:3000"
+        network_mode: host
+        volumes:
+            - grafana_data:/var/lib/grafana
+            - ./grafana-configs:/etc/grafana/provisioning:ro
+        environment:
+            - GF_SECURITY_ADMIN_PASSWORD=admin
+            - GF_USERS_ALLOW_SIGN_UP=false
+
+volumes:
+  prometheus_data:
+  grafana_data:
