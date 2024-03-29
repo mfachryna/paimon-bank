@@ -3,10 +3,9 @@ services:
     backend:
         build:
             context: .
-            dockerfile: dockerfile
+            dockerfile: Dockerfile
         ports:
             - "8080:8080"
-        network_mode: host
         environment:
             DB_NAME: ${DB_NAME}
             DB_PORT: ${DB_PORT}
@@ -21,12 +20,13 @@ services:
             S3_BUCKET_NAME: ${S3_BUCKET_NAME}
             S3_REGION: ${S3_REGION}
             ENV: ${ENV}
+        networks:
+            - paimon-bank-network
 
     prometheus:
         image: prom/prometheus:latest
         ports:
             - "9090:9090"
-        network_mode: host
         volumes:
             - ./prometheus.yml:/etc/prometheus/prometheus.yml
             - prometheus_data:/prometheus
@@ -34,18 +34,26 @@ services:
             - "--config.file=/etc/prometheus/prometheus.yml"
             - "--storage.tsdb.path=/prometheus"
             - "--web.enable-lifecycle"
+        networks:
+            - paimon-bank-network
+
     grafana:
-        image: grafana/grafana:latest
+        image: grafana/grafana-oss:latest
         ports:
             - "3000:3000"
-        network_mode: host
         volumes:
             - grafana_data:/var/lib/grafana
             - ./grafana-configs:/etc/grafana/provisioning:ro
         environment:
             - GF_SECURITY_ADMIN_PASSWORD=admin
             - GF_USERS_ALLOW_SIGN_UP=false
+        networks:
+            - paimon-bank-network
+
+networks:
+    paimon-bank-network:
+        driver: bridge
 
 volumes:
-  prometheus_data:
-  grafana_data:
+    prometheus_data:
+    grafana_data:
