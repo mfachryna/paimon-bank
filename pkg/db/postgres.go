@@ -37,10 +37,18 @@ func NewPsqlDB(c *config.Configuration) *pgxpool.Pool {
 		log.Fatalf("Error when creating db pool: %v", err)
 	}
 
-	if err := dbPool.Ping(context.Background()); err != nil {
+	if err := PingDatabase(context.Background(), dbPool); err != nil {
 		log.Fatalf("Can't pinging database: %v", err)
 	}
 
-	log.Println("Successed connect to databases")
+	log.Println("Success connect to database")
 	return dbPool
+}
+
+func PingDatabase(ctx context.Context, pgx *pgxpool.Pool) error {
+	if err := pgx.Ping(ctx); err != nil {
+		return err
+	}
+
+	return nil
 }
