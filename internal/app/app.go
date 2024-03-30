@@ -14,6 +14,7 @@ import (
 	"github.com/mfachryna/paimon-bank/config"
 	"github.com/mfachryna/paimon-bank/internal/common/utils/validation"
 	balancehandler "github.com/mfachryna/paimon-bank/internal/handler/balance"
+	healthhandler "github.com/mfachryna/paimon-bank/internal/handler/health"
 	imagehandler "github.com/mfachryna/paimon-bank/internal/handler/image"
 	userhandler "github.com/mfachryna/paimon-bank/internal/handler/user"
 	"github.com/mfachryna/paimon-bank/internal/repository"
@@ -42,7 +43,9 @@ func Run(cfg *config.Configuration) {
 
 	ur := repository.NewUserRepo(pgx, logger)
 	br := repository.NewBalanceRepo(pgx, logger)
+
 	r.Handle("/metrics", promhttp.Handler())
+	healthhandler.NewHealthHandler(r, pgx)
 	r.Route("/v1", func(r chi.Router) {
 		r.Use(promotheus.PrometheusMiddleware)
 		userhandler.NewUserHandler(r, ur, validate, *cfg, logger)
