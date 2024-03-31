@@ -39,15 +39,6 @@ func (bh *BalanceHandler) Transaction(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	if err := validation.UrlValidation(data.Receipt); err != nil {
-		bh.log.Info("failed to validate url", zap.Error(err))
-		(&response.Response{
-			HttpStatus: http.StatusBadRequest,
-			Message:    "URL malformed",
-		}).GenerateResponse(w)
-
-		return
-	}
 
 	ctx := r.Context()
 	userId = ctx.Value("user_id").(string)
@@ -76,7 +67,6 @@ func (bh *BalanceHandler) Transaction(w http.ResponseWriter, r *http.Request) {
 		ID:       dataId,
 		Balance:  data.Balance * (-1),
 		Currency: data.Currency,
-		Receipt:  data.Receipt,
 		UserId:   userId,
 		Source: entity.BalanceSource{
 			BankName:   data.BankName,
