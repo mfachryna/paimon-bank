@@ -22,8 +22,8 @@ services:
             S3_BUCKET_NAME: ${S3_BUCKET_NAME}
             S3_REGION: ${S3_REGION}
             ENV: ${ENV}
-        networks:
-            - paimon-bank-network
+        extra_hosts:
+        - "host.docker.internal:host-gateway"
 
     prometheus:
         image: prom/prometheus:latest
@@ -38,8 +38,6 @@ services:
             - "--config.file=/etc/prometheus/prometheus.yml"
             - "--storage.tsdb.path=/prometheus"
             - "--web.enable-lifecycle"
-        networks:
-            - paimon-bank-network
 
     grafana:
         image: grafana/grafana-oss:latest
@@ -47,16 +45,13 @@ services:
             - "3000:3000"
         volumes:
             - grafana_data:/var/lib/grafana
-            - ./grafana-configs:/etc/grafana/provisioning:ro
+            - ./grafana/dashboards:/etc/grafana/main-dashboards
+            - ./grafana-configs:/etc/grafana/provisioning
         environment:
             - GF_SECURITY_ADMIN_PASSWORD=admin
             - GF_USERS_ALLOW_SIGN_UP=false
-        networks:
-            - paimon-bank-network
-
-networks:
-    paimon-bank-network:
-        driver: bridge
+        extra_hosts:
+        - "host.docker.internal:host-gateway"
 
 volumes:
     prometheus_data:
