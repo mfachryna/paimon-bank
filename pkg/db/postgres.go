@@ -6,8 +6,10 @@ import (
 	"log"
 	"time"
 
+	pgxpool_prometheus "github.com/cmackenzie1/pgxpool-prometheus"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/mfachryna/paimon-bank/config"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 // Return new Postgresql db instance
@@ -40,6 +42,8 @@ func NewPsqlDB(c *config.Configuration) *pgxpool.Pool {
 	if err := PingDatabase(context.Background(), dbPool); err != nil {
 		log.Fatalf("Can't pinging database: %v", err)
 	}
+
+	prometheus.MustRegister(pgxpool_prometheus.NewPgxPoolStatsCollector(dbPool, c.Postgres.PostgresqlDbname))
 
 	log.Println("Success connect to database")
 	return dbPool
