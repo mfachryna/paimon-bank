@@ -6,7 +6,7 @@ WORKDIR /go/src/app
 COPY . .
 
 # Build the backend
-RUN go build -o backend ./cmd/main.go
+RUN GOOS=linux GOARCH=amd64 go build -o backend ./cmd/main.go
 
 # Set the environment variables
 ENV DB_NAME=${DB_NAME}
@@ -22,6 +22,8 @@ ENV S3_SECRET_KEY=${S3_SECRET_KEY}
 ENV S3_BUCKET_NAME=${S3_BUCKET_NAME}
 ENV S3_REGION=${S3_REGION}
 ENV ENV=${ENV}
+
+EXPOSE 8080
 
 # Set the command to run the backend
 CMD ["./backend"]
