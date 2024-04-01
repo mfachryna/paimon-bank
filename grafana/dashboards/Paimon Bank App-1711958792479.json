@@ -31,6 +31,7 @@
   "fiscalYearStartMonth": 0,
   "gnetId": 14331,
   "graphTooltip": 1,
+  "id": 8,
   "links": [],
   "panels": [
     {
@@ -100,7 +101,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "10.4.0",
       "targets": [
         {
           "datasource": {
@@ -169,7 +170,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "10.4.0",
       "targets": [
         {
           "datasource": {
@@ -237,7 +238,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "10.4.0",
       "targets": [
         {
           "datasource": {
@@ -305,7 +306,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "10.4.0",
       "targets": [
         {
           "datasource": {
@@ -375,7 +376,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "10.4.0",
       "targets": [
         {
           "datasource": {
@@ -589,7 +590,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "$datasource"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -668,7 +669,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P3CCD15422F6EB158"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "sum(rate(paimon_bank_requests_count[$__rate_interval])) by (status)",
@@ -684,7 +685,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "$datasource"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -767,7 +768,8 @@
             "filter": ""
           },
           "datasource": {
-            "uid": "$datasource"
+            "type": "prometheus",
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "exemplar": true,
@@ -810,7 +812,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "$datasource"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -893,7 +895,8 @@
             "filter": ""
           },
           "datasource": {
-            "uid": "$datasource"
+            "type": "prometheus",
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "exemplar": true,
@@ -1089,7 +1092,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "$datasource"
+        "uid": "P3CCD15422F6EB158"
       },
       "fieldConfig": {
         "defaults": {
@@ -1172,7 +1175,8 @@
             "filter": ""
           },
           "datasource": {
-            "uid": "$datasource"
+            "type": "prometheus",
+            "uid": "P3CCD15422F6EB158"
           },
           "editorMode": "code",
           "exemplar": true,
@@ -1427,7 +1431,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "histogram_quantile(0.5, sum by (le) (rate(chi_pattern_request_duration_milliseconds_bucket[$__rate_interval])))",
+          "expr": "histogram_quantile(0.5, sum by (le) (rate(chi_pattern_request_duration_milliseconds_bucket[$__rate_interval])/1000))",
           "format": "time_series",
           "functions": [],
           "group": {
@@ -1465,7 +1469,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "histogram_quantile(0.90, sum by (le) (rate(chi_pattern_request_duration_milliseconds_bucket[$__rate_interval])))",
+          "expr": "histogram_quantile(0.90, sum by (le) (rate(chi_pattern_request_duration_milliseconds_bucket[$__rate_interval])/1000))",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
@@ -1479,7 +1483,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(chi_pattern_request_duration_milliseconds_bucket[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(chi_pattern_request_duration_milliseconds_bucket[$__rate_interval])/1000))",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
@@ -1581,7 +1585,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "histogram_quantile(0.5, sum by (path, method, le) (rate(chi_pattern_request_duration_milliseconds_bucket[$__rate_interval])))",
+          "expr": "histogram_quantile(0.5, sum by (path, method, le) (rate(chi_pattern_request_duration_milliseconds_bucket[$__rate_interval])/1000))",
           "format": "time_series",
           "functions": [],
           "group": {
@@ -1619,7 +1623,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "histogram_quantile(0.90, sum by (path, method, le) (rate(chi_pattern_request_duration_milliseconds_bucket[$__rate_interval])))",
+          "expr": "histogram_quantile(0.90, sum by (path, method, le) (rate(chi_pattern_request_duration_milliseconds_bucket[$__rate_interval])/1000))",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
@@ -1633,7 +1637,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "histogram_quantile(0.95, sum by (path, method, le) (rate(chi_pattern_request_duration_milliseconds_bucket[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by (path, method, le) (rate(chi_pattern_request_duration_milliseconds_bucket[$__rate_interval])/1000))",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
@@ -1735,7 +1739,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "histogram_quantile(0.5, sum by (path, method, code, le) (rate(chi_pattern_request_duration_milliseconds_bucket[$__rate_interval])))",
+          "expr": "histogram_quantile(0.5, sum by (path, method, code, le) (rate(chi_pattern_request_duration_milliseconds_bucket[$__rate_interval])/1000))",
           "format": "time_series",
           "functions": [],
           "group": {
@@ -1773,7 +1777,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "histogram_quantile(0.90, sum by (path, method, code, le) (rate(chi_pattern_request_duration_milliseconds_bucket[$__rate_interval])))",
+          "expr": "histogram_quantile(0.90, sum by (path, method, code, le) (rate(chi_pattern_request_duration_milliseconds_bucket[$__rate_interval])/1000))",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
@@ -1787,7 +1791,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "histogram_quantile(0.95, sum by (path, method, code, le) (rate(chi_pattern_request_duration_milliseconds_bucket[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by (path, method, code, le) (rate(chi_pattern_request_duration_milliseconds_bucket[$__rate_interval])/1000))",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
