@@ -1,0 +1,81 @@
+name: Deploy Go App to ECS
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_REGION: ap-southeast-1                   # set this to your preferred AWS region, e.g. us-west-1
+  ECS_CLUSTER: dev-paimon-bank-shafa                 # set this to your Amazon ECS cluster name
+  CONTAINER_NAME: paimon-bank-shafa           # set this to the name of the container in the
+  ECS_SERVICE: backend               # set this to your Amazon ECS service name
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    environment: dev
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@62f4f872db3836360b72999f4b87f1ff13310f3a
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+          ECR_REPOSITORY: paimon-bank-shafa           # set this to your Amazon ECR repository name
+        run: |
+          echo "${{ secrets.DB_SSL_PEM }}" | base64 -d > file.pem
+          # Build a docker container and
+          # push it to ECR so that it can
+          # be deployed to ECS.
+          docker build \
+            --build-arg PEM_FILE=file.pem \
+            --build-arg "DB_HOST=${{ secrets.DB_HOST }}" \
+            --build-arg "DB_NAME=${{ secrets.DB_NAME }}" \
+            --build-arg "DB_USERNAME=${{ secrets.DB_USERNAME }}" \
+            --build-arg "DB_PARAMS=${{ secrets.DB_PARAMS }}" \
+            --build-arg "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" \
+            --build-arg "DB_PORT=${{ secrets.DB_PORT }}" \
+            --build-arg "DB_USERNAME=${{ secrets.DB_USERNAME }}" \
+            --build-arg "JWT_SECRET=${{ secrets.JWT_SECRET }}" \
+            --build-arg "S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}" \
+            --build-arg "S3_ID=${{ secrets.S3_ID }}" \
+            --build-arg "S3_REGION=${{ secrets.S3_REGION }}" \
+            --build-arg "S3_SECRET_KEY=${{ secrets.S3_SECRET_KEY }}" \
+            --build-arg "BCRYPT_SALT=${{ secrets.BCRYPT_SALT }}" \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@c804dfbdd57f713b6c079302a4c01db7017a36fc
+        env:
+          ECS_TASK_DEFINITION: .github/workflows/backend-definition.json # set this to the path to your Amazon ECS task definition
+        with:
+          task-definition: ${{ env.ECS_TASK_DEFINITION }}
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ steps.build-image.outputs.image }}
+
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@df9643053eda01f169e64a0e60233aacca83799a
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
