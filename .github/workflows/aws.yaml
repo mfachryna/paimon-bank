@@ -85,7 +85,9 @@ jobs:
           docker push $ECR/$GRAFANA_CONTAINER_NAME:$IMAGE_TAG
           echo "image=$ECR/$GRAFANA_CONTAINER_NAME:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
+
       - name: Update ECS Task Definitions
+        id: task-def
         env:
           ECR: ${{ steps.login-ecr.outputs.registry }}
           PROMETHEUS: ${{ steps.login-ecr.outputs.registry }}\/paimon-bank-shafa-prometheus:${{ github.sha }}
@@ -93,19 +95,13 @@ jobs:
           BACKEND: ${{ steps.login-ecr.outputs.registry }}\/paimon-bank-shafa:${{ github.sha }}
         run: |
           sed -i "s/$ECR\/paimon-bank-shafa:latest/$BACKEND/g" .github/workflows/backend.json
-          sed -i "s/$ECR\/paimon-bank-shafa-prometheus:latest/$PROMETHEUS/g" .github/workflows/prometheus.json
-          sed -i "s/$ECR\/paimon-bank-shafa-grafana:latest/$GRAFANA/g" .github/workflows/grafana.json
+          sed -i "s/$ECR\/paimon-bank-shafa-prometheus:latest/$PROMETHEUS/g" .github/workflows/backend.json
+          sed -i "s/$ECR\/paimon-bank-shafa-grafana:latest/$GRAFANA/g" .github/workflows/backend.json
 
           aws ecs register-task-definition --cli-input-json file://.github/workflows/backend.json
-          aws ecs register-task-definition --cli-input-json file://.github/workflows/prometheus.json
-          aws ecs register-task-definition --cli-input-json file://.github/workflows/grafana.json
 
       - name: Update ECS services
         run: |
-          LATEST_TASK_BE=$(aws ecs describe-task-definition --task-definition paimon-bank-shafa-backend-dev --query 'taskDefinition.taskDefinitionArn' --output text)
-          LATEST_TASK_PROME=$(aws ecs describe-task-definition --task-definition paimon-bank-shafa-prometheus-dev --query 'taskDefinition.taskDefinitionArn' --output text)
-          LATEST_TASK_GRAFANA=$(aws ecs describe-task-definition --task-definition paimon-bank-shafa-grafana-dev --query 'taskDefinition.taskDefinitionArn' --output text)
+          LATEST_TASK=$(aws ecs describe-task-definition --task-definition paimon-bank-shafa-backend-dev --query 'taskDefinition.taskDefinitionArn' --output text)
 
-          aws ecs update-service --cluster $ECS_CLUSTER --service backend --force-new-deployment --task-definition $LATEST_TASK_BE
-          aws ecs update-service --cluster $ECS_CLUSTER --service prometheus --force-new-deployment --task-definition $LATEST_TASK_PROME
-          aws ecs update-service --cluster $ECS_CLUSTER --service grafana --force-new-deployment --task-definition $LATEST_TASK_GRAFANA
+          aws ecs update-service --cluster $ECS_CLUSTER --service backend --force-new-deployment --task-definition $LATEST_TASK

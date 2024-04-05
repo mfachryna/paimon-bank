@@ -2,7 +2,7 @@
     "family": "paimon-bank-shafa-backend-dev",
     "containerDefinitions": [
         {
-            "name": "paimon-bank-shafa",
+            "name": "backend",
             "image": "560918124458.dkr.ecr.ap-southeast-1.amazonaws.com/paimon-bank-shafa:latest",
             "cpu": 0,
             "portMappings": [
@@ -25,6 +25,66 @@
                 "options": {
                     "awslogs-create-group": "true",
                     "awslogs-group": "/ecs/paimon-bank-app-dev-deploy-task",
+                    "awslogs-region": "ap-southeast-1",
+                    "awslogs-stream-prefix": "ecs"
+                },
+                "secretOptions": []
+            },
+            "systemControls": []
+        },
+        {
+            "name": "prometheus",
+            "image": "560918124458.dkr.ecr.ap-southeast-1.amazonaws.com/paimon-bank-shafa-prometheus:latest",
+            "cpu": 0,
+            "portMappings": [
+                {
+                    "name": "paimon-bank-shafa-prometheus-9090-tcp",
+                    "containerPort": 9090,
+                    "hostPort": 9090,
+                    "protocol": "tcp",
+                    "appProtocol": "http"
+                }
+            ],
+            "essential": false,
+            "environment": [],
+            "environmentFiles": [],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-create-group": "true",
+                    "awslogs-group": "/ecs/paimon-bank-shafa-backend-dev",
+                    "awslogs-region": "ap-southeast-1",
+                    "awslogs-stream-prefix": "ecs"
+                },
+                "secretOptions": []
+            },
+            "systemControls": []
+        },
+        {
+            "name": "grafana",
+            "image": "560918124458.dkr.ecr.ap-southeast-1.amazonaws.com/paimon-bank-shafa-grafana:latest",
+            "cpu": 0,
+            "portMappings": [
+                {
+                    "name": "paimon-bank-shafa-grafana-30000-tcp",
+                    "containerPort": 3000,
+                    "hostPort": 3000,
+                    "protocol": "tcp",
+                    "appProtocol": "http"
+                }
+            ],
+            "essential": false,
+            "environment": [],
+            "environmentFiles": [],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-create-group": "true",
+                    "awslogs-group": "/ecs/paimon-bank-shafa-backend-dev",
                     "awslogs-region": "ap-southeast-1",
                     "awslogs-stream-prefix": "ecs"
                 },

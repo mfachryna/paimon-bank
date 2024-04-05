@@ -6,7 +6,7 @@ datasources:
     isDefault: true
     access: proxy
     orgId: 1
-    url: http://prometheus:9090                                                                                                                                                                                                :9090
+    url: http://localhost:9090
     jsonData: {}
     secureJsonData: {}
     updateIntervalSeconds: 5
