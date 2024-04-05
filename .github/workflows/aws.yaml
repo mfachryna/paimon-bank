@@ -1,3 +1,4 @@
+---
 name: Deploy Go App to ECS
 
 on:
@@ -6,10 +7,8 @@ on:
       - main
 
 env:
-  AWS_REGION: ap-southeast-1                   # set this to your preferred AWS region, e.g. us-west-1
-  ECS_CLUSTER: dev-paimon-bank-shafa                 # set this to your Amazon ECS cluster name
-  CONTAINER_NAME: paimon-bank-shafa           # set this to the name of the container in the
-  ECS_SERVICE: backend               # set this to your Amazon ECS service name
+  AWS_REGION: ap-southeast-1
+  ECS_CLUSTER: dev-paimon-bank-shafa
 
 jobs:
   deploy:
@@ -35,9 +34,9 @@ jobs:
       - name: Build, tag, and push image to Amazon ECR
         id: build-image
         env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
-          ECR_REPOSITORY: paimon-bank-shafa           # set this to your Amazon ECR repository name
+          BEC_NAME: paimon-bank-shafa
         run: |
           echo "${{ secrets.DB_SSL_PEM }}" | base64 -d > file.pem
           # Build a docker container and
@@ -58,24 +57,55 @@ jobs:
             --build-arg "S3_REGION=${{ secrets.S3_REGION }}" \
             --build-arg "S3_SECRET_KEY=${{ secrets.S3_SECRET_KEY }}" \
             --build-arg "BCRYPT_SALT=${{ secrets.BCRYPT_SALT }}" \
-            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+            -t $ECR/$BEC_NAME:$IMAGE_TAG --file ./dockerfile/backend/Dockerfile .
+          docker push $ECR/$BEC_NAME:$IMAGE_TAG
+          echo "image=$ECR/$BEC_NAME:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-      - name: Fill in the new image ID in the Amazon ECS task definition
-        id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@c804dfbdd57f713b6c079302a4c01db7017a36fc
+      - name: Build and push Prometheus Docker image
+        id: build-image-prometheus
         env:
-          ECS_TASK_DEFINITION: .github/workflows/backend-definition.json # set this to the path to your Amazon ECS task definition
-        with:
-          task-definition: ${{ env.ECS_TASK_DEFINITION }}
-          container-name: ${{ env.CONTAINER_NAME }}
-          image: ${{ steps.build-image.outputs.image }}
+          ECR: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+          PROMETHEUS_CONTAINER_NAME: paimon-bank-shafa-prometheus
+        run: |
+          docker build \
+            -t $ECR/$PROMETHEUS_CONTAINER_NAME:$IMAGE_TAG --file ./dockerfile/prometheus/Dockerfile .
+          docker push $ECR/$PROMETHEUS_CONTAINER_NAME:$IMAGE_TAG
+          echo "image=$ECR/$PROMETHEUS_CONTAINER_NAME:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-      - name: Deploy Amazon ECS task definition
-        uses: aws-actions/amazon-ecs-deploy-task-definition@df9643053eda01f169e64a0e60233aacca83799a
-        with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ env.ECS_SERVICE }}
-          cluster: ${{ env.ECS_CLUSTER }}
-          wait-for-service-stability: true
+      - name: Build and push Grafana Docker image
+        id: build-image-grafana
+        env:
+          ECR: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+          GRAFANA_CONTAINER_NAME: paimon-bank-shafa-grafana
+        run: |
+          docker build \
+            -t $ECR/$GRAFANA_CONTAINER_NAME:$IMAGE_TAG --file ./dockerfile/grafana/Dockerfile .
+          docker push $ECR/$GRAFANA_CONTAINER_NAME:$IMAGE_TAG
+          echo "image=$ECR/$GRAFANA_CONTAINER_NAME:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Update ECS Task Definitions
+        env:
+          ECR: ${{ steps.login-ecr.outputs.registry }}
+          PROMETHEUS: ${{ steps.login-ecr.outputs.registry }}\/paimon-bank-shafa-prometheus:${{ github.sha }}
+          GRAFANA: ${{ steps.login-ecr.outputs.registry }}\/paimon-bank-shafa-grafana:${{ github.sha }}
+          BACKEND: ${{ steps.login-ecr.outputs.registry }}\/paimon-bank-shafa:${{ github.sha }}
+        run: |
+          sed -i "s/$ECR\/paimon-bank-shafa:latest/$BACKEND/g" .github/workflows/backend.json
+          sed -i "s/$ECR\/paimon-bank-shafa-prometheus:latest/$PROMETHEUS/g" .github/workflows/prometheus.json
+          sed -i "s/$ECR\/paimon-bank-shafa-grafana:latest/$GRAFANA/g" .github/workflows/grafana.json
+
+          aws ecs register-task-definition --cli-input-json file://.github/workflows/backend.json
+          aws ecs register-task-definition --cli-input-json file://.github/workflows/prometheus.json
+          aws ecs register-task-definition --cli-input-json file://.github/workflows/grafana.json
+
+      - name: Update ECS services
+        run: |
+          LATEST_TASK_BE=$(aws ecs describe-task-definition --task-definition paimon-bank-shafa-backend-dev --query 'taskDefinition.taskDefinitionArn' --output text)
+          LATEST_TASK_PROME=$(aws ecs describe-task-definition --task-definition paimon-bank-shafa-prometheus-dev --query 'taskDefinition.taskDefinitionArn' --output text)
+          LATEST_TASK_GRAFANA=$(aws ecs describe-task-definition --task-definition paimon-bank-shafa-grafana-dev --query 'taskDefinition.taskDefinitionArn' --output text)
+
+          aws ecs update-service --cluster $ECS_CLUSTER --service backend --force-new-deployment --task-definition $LATEST_TASK_BE
+          aws ecs update-service --cluster $ECS_CLUSTER --service prometheus --force-new-deployment --task-definition $LATEST_TASK_PROME
+          aws ecs update-service --cluster $ECS_CLUSTER --service grafana --force-new-deployment --task-definition $LATEST_TASK_GRAFANA

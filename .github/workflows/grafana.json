@@ -1,0 +1,48 @@
+{
+    "family": "paimon-bank-shafa-grafana-dev",
+    "containerDefinitions": [
+        {
+            "name": "paimon-bank-shafa-grafana",
+            "image": "560918124458.dkr.ecr.ap-southeast-1.amazonaws.com/paimon-bank-shafa-grafana:latest",
+            "cpu": 0,
+            "portMappings": [
+                {
+                    "name": "paimon-bank-shafa-grafana-3000-tcp",
+                    "containerPort": 3000,
+                    "hostPort": 3000,
+                    "protocol": "tcp",
+                    "appProtocol": "http"
+                }
+            ],
+            "essential": true,
+            "environment": [],
+            "environmentFiles": [],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "ulimits": [],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-create-group": "true",
+                    "awslogs-group": "/ecs/paimon-bank-app-dev-deploy-task",
+                    "awslogs-region": "ap-southeast-1",
+                    "awslogs-stream-prefix": "ecs"
+                },
+                "secretOptions": []
+            },
+            "systemControls": []
+        }
+    ],
+    "taskRoleArn": "arn:aws:iam::560918124458:role/projectsprint_ecs_task_role",
+    "executionRoleArn": "arn:aws:iam::560918124458:role/projectsprint_ecs_task_execution_role",
+    "networkMode": "awsvpc",
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "1024",
+    "memory": "3072",
+    "runtimePlatform": {
+        "cpuArchitecture": "X86_64",
+        "operatingSystemFamily": "LINUX"
+    }
+}

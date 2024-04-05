@@ -44,4 +44,3 @@ start-grafana:
 	docker volume create grafana-storage
 	docker volume inspect grafana-storage
 	docker run -p 3000:3000 --name=grafana grafana/grafana-oss || docker start grafana
-	
